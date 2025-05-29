@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Reconstruction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        .container {
+            margin-top: 150px;
+            padding: 20px;
+        }
+        .example {
+            margin-bottom: 60px;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            position: relative;
+        }
+        .image-column {
+            margin: 0 5px;
+            text-align: center;
+        }
+        .image-title {
+            font-weight: bold;
+            margin-bottom: 0px;
+        }
+        .selection-image {
+            cursor: pointer;
+            border: 0px solid transparent;
+            transition: border 0.3s;
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+        }
+        .selection-image.selected {
+            border: 10px solid red;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 id="pageTitle">See config.</h1>
+    <p id="pageInstructions">See config.</p>
+</header>
+
+<div class="container">
+
+    <form id="surveyForm">
+        <label for="name">Name: </label>
+        <input type="text" id="name" required>
+        <label for="email">Email: </label>
+        <input type="email" id="email" required>
+        <button id="backButton">Previous Page</button>
+        <button id="nextButton">Next Page</button>
+
+        <!-- Example Section -->
+        <!-- <div class="example">
+            <h2>Example</h2>
+            <img src="example.png" alt="Example" style="width: 1000px; object-fit: cover;">
+        </div> -->
+        
+        <div id="questions-container">
+            <!-- Questions will be dynamically added here -->
+        </div>
+
+        <footer>
+            <button type="button" onclick="submitSurvey()">Submit</button>
+        </footer>
+    </form>
+</div>
+
+<script>
+    const config = {
+        folders: [
+            // {name: "Reconstruction", path: "Ours", format: "png", indices: [2, 11, 21, 31, 50, 73, 87, 100, 110, 120, 141, 156, 164, 170, 193, 205, 220, 230, 241, 251, 260, 271, 287, 290, 302, 310, 320, 331, 340, 350, 360, 380, 390, 406, 410, 431, 442, 451, 463, 470, 485, 490, 500, 512, 520, 540, 551, 571, 584, 590]},
+            // {name: "Target", path: "Target", format: "jpg", indices: [[2, 11, 21, 31, 50, 73, 87, 100, 110, 120, 141, 156, 164, 170, 193, 205, 220, 230, 241, 251, 260, 271, 287, 290, 302, 310, 320, 331, 340, 350, 360, 380, 390, 406, 410, 431, 442, 451, 463, 470, 485, 490, 500, 512, 520, 540, 551, 571, 584, 590], [3, 12, 22, 32, 51, 74, 88, 101, 111, 121, 142, 157, 165, 171, 194, 206, 221, 231, 242, 252, 261, 272, 288, 291, 303, 311, 321, 332, 341, 351, 361, 381, 391, 407, 411, 432, 443, 452, 464, 471, 486, 491, 501, 513, 521, 541, 552, 572, 585, 591]]},
+            // {name: "ConfuseA", path: "Target", format: "jpg", indices: [[807, 157, 508, 555, 456, 185, 600, 498, 308, 289, 767, 20, 313, 708, 513, 253, 633, 532, 237, 408, 508, 108, 714, 273, 617, 959, 474, 740, 576, 334, 392, 112, 741, 739, 749, 29, 799, 298, 478, 158, 573, 21, 17, 102, 573, 321, 369, 4, 360, 454], [808, 158, 509, 556, 457, 186, 601, 499, 309, 288, 768, 21, 314, 709, 514, 254, 634, 533, 238, 409, 509, 109, 715, 274, 618, 958, 475, 741, 577, 335, 393, 113, 742, 738, 748, 28, 798, 299, 479, 159, 574, 22, 18, 103, 574, 322, 368, 5, 361, 455]]},
+            // {name: "ConfuseB", path: "Target", format: "jpg", indices: [[571, 768, 310, 933, 253, 601, 432, 970, 146, 203, 733, 827, 125, 761, 43, 903, 575, 133, 670, 903, 338, 204, 136, 635, 573, 194, 544, 776, 963, 621, 744, 616, 931, 556, 679, 8, 546, 18, 910, 717, 804, 973, 253, 111, 433, 14, 270, 352, 2, 720], [572, 769, 311, 934, 254, 602, 433, 971, 147, 204, 734, 828, 126, 762, 44, 904, 576, 134, 671, 904, 339, 205, 137, 636, 574, 195, 545, 777, 964, 622, 745, 617, 932, 557, 678, 9, 547, 19, 911, 718, 805, 974, 254, 112, 434, 15, 271, 353, 3, 721]]},
+            
+            // {name: "Reconstruction", path: "Ours", format: "png", indices: [5, 15, 25, 35, 45, 55, 65, 75, 85, 95, 105, 115, 125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395, 405, 415, 425, 435, 445, 455, 465, 475, 485, 495]},
+            // {name: "Target", path: "Target", format: "jpg", indices: [[5, 15, 25, 35, 45, 55, 65, 75, 85, 95, 105, 115, 125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395, 405, 415, 425, 435, 445, 455, 465, 475, 485, 495], [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490]]},
+            // {name: "ConfuseA", path: "Target", format: "jpg", indices: [[618, 504, 926, 443, 254, 158, 415, 469, 109, 909, 39, 898, 672, 387, 282, 36, 207, 709, 673, 558, 253, 207, 704, 445, 923, 69, 908, 511, 454, 982, 400, 190, 714, 441, 808, 740, 166, 77, 974, 917, 128, 868, 565, 3, 382, 400, 991, 327, 573, 537], [619, 505, 927, 444, 255, 159, 416, 468, 108, 908, 38, 899, 673, 388, 283, 37, 208, 708, 674, 559, 254, 208, 705, 446, 924, 68, 909, 512, 455, 983, 401, 191, 715, 442, 809, 741, 167, 78, 975, 918, 129, 869, 566, 4, 383, 401, 992, 328, 574, 538]]},
+            // {name: "ConfuseB", path: "Target", format: "jpg", indices: [[897, 385, 640, 708, 313, 702, 98, 91, 26, 847, 769, 512, 370, 220, 405, 746, 346, 762, 996, 317, 903, 183, 635, 842, 465, 205, 177, 751, 359, 629, 718, 968, 688, 381, 316, 622, 357, 107, 10, 757, 357, 66, 924, 275, 710, 253, 79, 84, 804, 736], [898, 386, 641, 709, 314, 703, 99, 92, 27, 848, 768, 513, 371, 221, 406, 747, 347, 763, 997, 318, 904, 184, 636, 843, 466, 206, 178, 752, 358, 628, 719, 969, 689, 382, 317, 623, 358, 108, 11, 758, 358, 67, 925, 276, 711, 254, 78, 85, 805, 737]]},
+
+
+            {name: "Reconstruction", path: "Ours_celeba", format: "png", indices: [6, 16, 26, 36, 46, 56, 66, 76, 86, 96, 106, 116, 126, 136, 146, 156, 166, 176, 186, 196]},
+            {name: "Target", path: "Target_celeba", format: "jpg", indices: [[6, 16, 26, 36, 46, 56, 66, 76, 86, 96, 106, 116, 126, 136, 146, 156, 166, 176, 186, 196], [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190]]},
+            {name: "ConfuseA", path: "Target_celeba", format: "jpg", indices: [[804,281,89,299,751,912,335,339,755,12,261,802,348,108,528,117,634,790,781,445], [805, 282, 88, 298, 752, 913, 336, 338, 756, 13, 262, 803, 349, 109, 529, 118, 635, 791, 782, 446]]},
+            {name: "ConfuseB", path: "Target_celeba", format: "jpg", indices: [[148,497,183,86,455,538,967,205,929,454,543,88,976,719,474,895,413,895,444,946], [149, 498, 184, 87, 456, 539, 968, 206, 928, 455, 544, 89, 977, 718, 475, 896, 414, 896, 445, 947]]},
+
+            {name: "I don't know", path: "Template", format: "jpg", indices: [99999]},
+            
+
+        ],
+        pageTitle: "Study on Face Reconstruction Quality - Page 2",
+        pageInstructions: "The reconstucted face is based on one target person. Find it, and select {I don't know} if you cannot identify it.",
+        fileNameList: ['00156_15.jpg', '00648_64.jpg', '00927_92.jpg', '00574_57.jpg', '00872_87.jpg', '00421_42.jpg', '00884_88.jpg', '00582_58.jpg', '00087_8.jpg', '00464_46.jpg', '00837_83.jpg', '00758_75.jpg', '00113_11.jpg', '00074_7.jpg', '00531_53.jpg', '00962_96.jpg', '00994_99.jpg', '00492_49.jpg', '00223_22.jpg', '00601_60.jpg', '00754_75.jpg', '00376_37.jpg', '00468_46.jpg', '00380_38.jpg', '00998_99.jpg', '00711_71.jpg', '00333_33.jpg', '00578_57.jpg', '00266_26.jpg', '00035_3.jpg', '00644_64.jpg', '00290_29.jpg', '00888_88.jpg', '00480_48.jpg', '00986_98.jpg', '00101_10.jpg', '00013_1.jpg', '00523_52.jpg', '00970_97.jpg', '00476_47.jpg', '00825_82.jpg', '00368_36.jpg', '00590_59.jpg', '00896_89.jpg', '00860_86.jpg', '00433_43.jpg', '00144_14.jpg', '00278_27.jpg', '00935_93.jpg', '00566_56.jpg', '00282_28.jpg', '00274_27.jpg', '00052_5.jpg', '00939_93.jpg', '00656_65.jpg', '00148_14.jpg', '00703_70.jpg', '00321_32.jpg', '00392_39.jpg', '00746_74.jpg', '00829_82.jpg', '00364_36.jpg', '00231_23.jpg', '00613_61.jpg', '00696_69.jpg', '00188_18.jpg', '00050_5.jpg', '00409_40.jpg', '00317_31.jpg', '00735_73.jpg', '00008_0.jpg', '00660_66.jpg', '00242_24.jpg', '00786_78.jpg', '00625_62.jpg', '00207_20.jpg', '00519_51.jpg', '00352_35.jpg', '00770_77.jpg', '00011_1.jpg', '00813_81.jpg', '00440_44.jpg', '00946_94.jpg', '00515_51.jpg', '00629_62.jpg', '00049_4.jpg', '00137_13.jpg', '00184_18.jpg', '00550_55.jpg', '00903_90.jpg', '00172_17.jpg', '00739_73.jpg', '00405_40.jpg', '00856_85.jpg', '00340_34.jpg', '00762_76.jpg', '00129_12.jpg', '00637_63.jpg', '00958_95.jpg', '00215_21.jpg', '00794_79.jpg', '00672_67.jpg', '00250_25.jpg', '00305_30.jpg', '00848_84.jpg', '00727_72.jpg', '00037_3.jpg', '00684_68.jpg', '00309_30.jpg', '00417_41.jpg', '00844_84.jpg', '00542_54.jpg', '00911_91.jpg', '00160_16.jpg', '00196_19.jpg', '00688_68.jpg', '00954_95.jpg', '00507_50.jpg', '00219_21.jpg', '00125_12.jpg', '00801_80.jpg', '00452_45.jpg', '00076_7.jpg', '00798_79.jpg', '00085_8.jpg', '00698_69.jpg', '00033_3.jpg', '00186_18.jpg', '00407_40.jpg', '00854_85.jpg', '00319_31.jpg', '00552_55.jpg', '00901_90.jpg', '00170_17.jpg', '00098_9.jpg', '00788_78.jpg', '00209_20.jpg', '00944_94.jpg', '00517_51.jpg', '00135_13.jpg', '00811_81.jpg', '00442_44.jpg', '00072_7.jpg', '00081_8.jpg', '00784_78.jpg', '00350_35.jpg', '00772_77.jpg', '00627_62.jpg', '00139_13.jpg', '00205_20.jpg', '00948_94.jpg', '00694_69.jpg', '00662_66.jpg', '00240_24.jpg', '00858_85.jpg', '00315_31.jpg', '00737_73.jpg', '00803_80.jpg', '00450_45.jpg', '00956_95.jpg', '00505_50.jpg', '00127_12.jpg', '00639_63.jpg', '00540_54.jpg', '00913_91.jpg', '00162_16.jpg', '00729_72.jpg', '00415_41.jpg', '00846_84.jpg', '00054_5.jpg', '00194_19.jpg', '00307_30.jpg', '00419_41.jpg', '00725_72.jpg', '00670_67.jpg', '00252_25.jpg', '00198_19.jpg', '00686_68.jpg', '00635_63.jpg', '00509_50.jpg', '00217_21.jpg', '00342_34.jpg', '00760_76.jpg', '00796_79.jpg', '00015_1.jpg', '00929_92.jpg', '00264_26.jpg', '00158_15.jpg', '00646_64.jpg', '00713_71.jpg', '00331_33.jpg', '00292_29.jpg', '00756_75.jpg', '00374_37.jpg', '00839_83.jpg', '00017_1.jpg', '00221_22.jpg', '00603_60.jpg', '00382_38.jpg', '00111_11.jpg', '00533_53.jpg', '00960_96.jpg', '00378_37.jpg', '00466_46.jpg', '00835_83.jpg', '00490_49.jpg', '00996_99.jpg', '00870_87.jpg', '00423_42.jpg', '00056_5.jpg', '00154_15.jpg', '00925_92.jpg', '00576_57.jpg', '00268_26.jpg', '00580_58.jpg', '00886_88.jpg', '00390_39.jpg', '00988_98.jpg', '00028_2.jpg', '00233_23.jpg', '00083_8.jpg', '00611_61.jpg', '00070_7.jpg', '00744_74.jpg', '00478_47.jpg', '00366_36.jpg', '00280_28.jpg', '00898_89.jpg', '00701_70.jpg', '00323_32.jpg', '00276_27.jpg', '00568_56.jpg', '00654_65.jpg', '00894_89.jpg', '00069_6.jpg', '00592_59.jpg', '00658_65.jpg', '00146_14.jpg', '00937_93.jpg', '00564_56.jpg', '00862_86.jpg', '00431_43.jpg', '00031_3.jpg', '00984_98.jpg', '00482_48.jpg', '00474_47.jpg', '00827_82.jpg', '00748_74.jpg', '00103_10.jpg', '00521_52.jpg', '00972_97.jpg', '00682_68.jpg', '00303_30.jpg', '00721_72.jpg', '00674_67.jpg', '00548_54.jpg', '00256_25.jpg', '00792_79.jpg', '00010_1.jpg', '00631_63.jpg', '00213_21.jpg', '00346_34.jpg', '00458_45.jpg', '00764_76.jpg', '00048_4.jpg', '00768_76.jpg', '00454_45.jpg', '00807_80.jpg', '00501_50.jpg', '00952_95.jpg', '00123_12.jpg', '00051_5.jpg', '00190_19.jpg', '00917_91.jpg', '00544_54.jpg', '00166_16.jpg', '00678_67.jpg', '00009_0.jpg', '00842_84.jpg', '00411_41.jpg', '00819_81.jpg', '00354_35.jpg', '00776_77.jpg', '00623_62.jpg', '00201_20.jpg', '00077_7.jpg', '00084_8.jpg', '00780_78.jpg', '00666_66.jpg', '00178_17.jpg', '00244_24.jpg', '00909_90.jpg', '00311_31.jpg', '00733_73.jpg', '00690_69.jpg', '00850_85.jpg', '00403_40.jpg', '00248_24.jpg', '00905_90.jpg', '00556_55.jpg', '00174_17.jpg', '00036_3.jpg', '00182_18.jpg', '00513_51.jpg', '00940_94.jpg', '00131_13.jpg', '00446_44.jpg', '00815_81.jpg', '00358_35.jpg', '00142_14.jpg', '00560_56.jpg', '00933_93.jpg', '00435_43.jpg', '00866_86.jpg', '00709_70.jpg', '00034_3.jpg', '00890_89.jpg', '00288_28.jpg', '00596_59.jpg', '00823_82.jpg', '00470_47.jpg', '00619_61.jpg', '00107_10.jpg', '00976_97.jpg', '00525_52.jpg', '00980_98.jpg', '00486_48.jpg', '00398_39.jpg', '00237_23.jpg', '00529_52.jpg', '00086_8.jpg', '00615_61.jpg', '00075_7.jpg', '00740_74.jpg', '00362_36.jpg', '00394_39.jpg', '00705_70.jpg', '00439_43.jpg', '00327_32.jpg', '00272_27.jpg', '00650_65.jpg', '00284_28.jpg', '00494_49.jpg', '00992_99.jpg', '00115_11.jpg', '00964_96.jpg', '00537_53.jpg', '00229_22.jpg', '00831_83.jpg', '00462_46.jpg', '00584_58.jpg', '00882_88.jpg', '00053_5.jpg', '00339_33.jpg', '00427_42.jpg', '00874_87.jpg', '00150_15.jpg', '00572_57.jpg', '00921_92.jpg', '00588_58.jpg', '00296_29.jpg', '00260_26.jpg', '00642_64.jpg', '00717_71.jpg', '00335_33.jpg', '00878_87.jpg', '00386_38.jpg', '00498_49.jpg', '00752_75.jpg', '00012_1.jpg', '00370_37.jpg', '00968_96.jpg', '00225_22.jpg', '00119_11.jpg', '00607_60.jpg', '00270_27.jpg', '00057_5.jpg', '00652_65.jpg', '00707_70.jpg', '00868_86.jpg', '00325_32.jpg', '00286_28.jpg', '00598_59.jpg', '00742_74.jpg', '00360_36.jpg', '00235_23.jpg', '00978_97.jpg', '00617_61.jpg', '00109_10.jpg', '00488_48.jpg', '00396_39.jpg', '00105_10.jpg', '00239_23.jpg', '00016_1.jpg', '00974_97.jpg', '00527_52.jpg', '00821_82.jpg', '00472_47.jpg', '00484_48.jpg', '00982_98.jpg', '00437_43.jpg', '00864_86.jpg', '00329_32.jpg', '00140_14.jpg', '00562_56.jpg', '00931_93.jpg', '00594_59.jpg', '00892_89.jpg', '00384_38.jpg', '00539_53.jpg', '00227_22.jpg', '00605_60.jpg', '00750_75.jpg', '00372_37.jpg', '00294_29.jpg', '00068_6.jpg', '00715_71.jpg', '00337_33.jpg', '00429_42.jpg', '00262_26.jpg', '00640_64.jpg', '00030_3.jpg', '00880_88.jpg', '00586_58.jpg', '00298_29.jpg', '00152_15.jpg', '00570_57.jpg', '00923_92.jpg', '00425_42.jpg', '00876_87.jpg', '00719_71.jpg', '00990_99.jpg', '00388_38.jpg', '00029_2.jpg', '00496_49.jpg', '00833_83.jpg', '00460_46.jpg', '00082_8.jpg', '00117_11.jpg', '00071_7.jpg', '00609_60.jpg', '00966_96.jpg', '00535_53.jpg', '00192_19.jpg', '00840_84.jpg', '00413_41.jpg', '00915_91.jpg', '00546_54.jpg', '00258_25.jpg', '00164_16.jpg', '00073_7.jpg', '00080_8.jpg', '00503_50.jpg', '00950_95.jpg', '00121_12.jpg', '00348_34.jpg', '00456_45.jpg', '00805_80.jpg', '00790_79.jpg', '00344_34.jpg', '00809_80.jpg', '00766_76.jpg', '00633_63.jpg', '00211_21.jpg', '00032_3.jpg', '00680_68.jpg', '00168_16.jpg', '00676_67.jpg', '00919_91.jpg', '00254_25.jpg', '00301_30.jpg', '00723_72.jpg', '00099_9.jpg', '00778_77.jpg', '00444_44.jpg', '00817_81.jpg', '00511_51.jpg', '00942_94.jpg', '00133_13.jpg', '00014_1.jpg', '00907_90.jpg', '00554_55.jpg', '00668_66.jpg', '00176_17.jpg', '00852_85.jpg', '00401_40.jpg', '00180_18.jpg', '00313_31.jpg', '00731_73.jpg', '00664_66.jpg', '00246_24.jpg', '00558_55.jpg', '00692_69.jpg', '00055_5.jpg', '00621_62.jpg', '00203_20.jpg', '00448_44.jpg', '00356_35.jpg', '00774_77.jpg', '00782_78.jpg', '00001_0.jpg', '00685_68.jpg', '00251_25.jpg', '00059_5.jpg', '00673_67.jpg', '00726_72.jpg', '00304_30.jpg', '00849_84.jpg', '00795_79.jpg', '00763_76.jpg', '00341_34.jpg', '00959_95.jpg', '00214_21.jpg', '00128_12.jpg', '00636_63.jpg', '00040_4.jpg', '00799_79.jpg', '00018_1.jpg', '00124_12.jpg', '00955_95.jpg', '00506_50.jpg', '00218_21.jpg', '00800_80.jpg', '00453_45.jpg', '00197_19.jpg', '00689_68.jpg', '00308_30.jpg', '00416_41.jpg', '00845_84.jpg', '00161_16.jpg', '00543_54.jpg', '00910_91.jpg', '00206_20.jpg', '00518_51.jpg', '00624_62.jpg', '00771_77.jpg', '00353_35.jpg', '00787_78.jpg', '00734_73.jpg', '00408_40.jpg', '00316_31.jpg', '00243_24.jpg', '00661_66.jpg', '00095_9.jpg', '00697_69.jpg', '00189_18.jpg', '00066_6.jpg', '00173_17.jpg', '00551_55.jpg', '00902_90.jpg', '00404_40.jpg', '00857_85.jpg', '00738_73.jpg', '00185_18.jpg', '00812_81.jpg', '00441_44.jpg', '00628_62.jpg', '00136_13.jpg', '00947_94.jpg', '00514_51.jpg', '00027_2.jpg', '00861_86.jpg', '00432_43.jpg', '00279_27.jpg', '00934_93.jpg', '00567_56.jpg', '00145_14.jpg', '00591_59.jpg', '00897_89.jpg', '00522_52.jpg', '00971_97.jpg', '00025_2.jpg', '00100_10.jpg', '00477_47.jpg', '00824_82.jpg', '00369_36.jpg', '00481_48.jpg', '00987_98.jpg', '00828_82.jpg', '00365_36.jpg', '00747_74.jpg', '00612_61.jpg', '00230_23.jpg', '00393_39.jpg', '00657_65.jpg', '00064_6.jpg', '00149_14.jpg', '00275_27.jpg', '00938_93.jpg', '00097_9.jpg', '00320_32.jpg', '00702_70.jpg', '00283_28.jpg', '00995_99.jpg', '00493_49.jpg', '00759_75.jpg', '00465_46.jpg', '00836_83.jpg', '00530_53.jpg', '00963_96.jpg', '00042_4.jpg', '00112_11.jpg', '00885_88.jpg', '00583_58.jpg', '00926_92.jpg', '00575_57.jpg', '00157_15.jpg', '00649_64.jpg', '00873_87.jpg', '00420_42.jpg', '00291_29.jpg', '00889_88.jpg', '00332_33.jpg', '00710_71.jpg', '00645_64.jpg', '00579_57.jpg', '00267_26.jpg', '00003_0.jpg', '00381_38.jpg', '00999_99.jpg', '00600_60.jpg', '00222_22.jpg', '00377_37.jpg', '00469_46.jpg', '00755_75.jpg', '00322_32.jpg', '00700_70.jpg', '00655_65.jpg', '00277_27.jpg', '00569_56.jpg', '00281_28.jpg', '00899_89.jpg', '00610_61.jpg', '00232_23.jpg', '00479_47.jpg', '00046_4.jpg', '00367_36.jpg', '00745_74.jpg', '00391_39.jpg', '00989_98.jpg', '00749_74.jpg', '00475_47.jpg', '00826_82.jpg', '00520_52.jpg', '00973_97.jpg', '00102_10.jpg', '00985_98.jpg', '00483_48.jpg', '00936_93.jpg', '00565_56.jpg', '00659_65.jpg', '00147_14.jpg', '00863_86.jpg', '00430_43.jpg', '00007_0.jpg', '00895_89.jpg', '00593_59.jpg', '00079_7.jpg', '00383_38.jpg', '00375_37.jpg', '00838_83.jpg', '00021_2.jpg', '00757_75.jpg', '00602_60.jpg', '00220_22.jpg', '00293_29.jpg', '00159_15.jpg', '00647_64.jpg', '00928_92.jpg', '00265_26.jpg', '00330_33.jpg', '00712_71.jpg', '00581_58.jpg', '00038_3.jpg', '00887_88.jpg', '00060_6.jpg', '00871_87.jpg', '00422_42.jpg', '00924_92.jpg', '00577_57.jpg', '00093_9.jpg', '00269_26.jpg', '00155_15.jpg', '00491_49.jpg', '00997_99.jpg', '00532_53.jpg', '00961_96.jpg', '00110_11.jpg', '00379_37.jpg', '00467_46.jpg', '00834_83.jpg', '00091_9.jpg', '00195_19.jpg', '00062_6.jpg', '00163_16.jpg', '00541_54.jpg', '00912_91.jpg', '00414_41.jpg', '00847_84.jpg', '00728_72.jpg', '00802_80.jpg', '00451_45.jpg', '00126_12.jpg', '00638_63.jpg', '00957_95.jpg', '00504_50.jpg', '00797_79.jpg', '00023_2.jpg', '00508_50.jpg', '00216_21.jpg', '00634_63.jpg', '00088_8.jpg', '00761_76.jpg', '00343_34.jpg', '00199_19.jpg', '00687_68.jpg', '00724_72.jpg', '00306_30.jpg', '00418_41.jpg', '00253_25.jpg', '00671_67.jpg', '00134_13.jpg', '00208_20.jpg', '00945_94.jpg', '00516_51.jpg', '00810_81.jpg', '00443_44.jpg', '00789_78.jpg', '00406_40.jpg', '00855_85.jpg', '00318_31.jpg', '00171_17.jpg', '00553_55.jpg', '00900_90.jpg', '00699_69.jpg', '00187_18.jpg', '00005_0.jpg', '00241_24.jpg', '00663_66.jpg', '00736_73.jpg', '00859_85.jpg', '00314_31.jpg', '00695_69.jpg', '00773_77.jpg', '00351_35.jpg', '00204_20.jpg', '00949_94.jpg', '00626_62.jpg', '00138_13.jpg', '00044_4.jpg', '00785_78.jpg', '00065_6.jpg', '00338_33.jpg', '00426_42.jpg', '00875_87.jpg', '00573_57.jpg', '00920_92.jpg', '00096_9.jpg', '00151_15.jpg', '00585_58.jpg', '00883_88.jpg', '00965_96.jpg', '00536_53.jpg', '00228_22.jpg', '00114_11.jpg', '00830_83.jpg', '00463_46.jpg', '00495_49.jpg', '00993_99.jpg', '00371_37.jpg', '00753_75.jpg', '00024_2.jpg', '00118_11.jpg', '00606_60.jpg', '00969_96.jpg', '00224_22.jpg', '00387_38.jpg', '00499_49.jpg', '00643_64.jpg', '00261_26.jpg', '00334_33.jpg', '00879_87.jpg', '00716_71.jpg', '00589_58.jpg', '00297_29.jpg', '00981_98.jpg', '00487_48.jpg', '00399_39.jpg', '00822_82.jpg', '00471_47.jpg', '00977_97.jpg', '00524_52.jpg', '00618_61.jpg', '00106_10.jpg', '00891_89.jpg', '00289_28.jpg', '00597_59.jpg', '00561_56.jpg', '00932_93.jpg', '00143_14.jpg', '00708_70.jpg', '00002_0.jpg', '00434_43.jpg', '00867_86.jpg', '00285_28.jpg', '00438_43.jpg', '00326_32.jpg', '00704_70.jpg', '00651_65.jpg', '00273_27.jpg', '00395_39.jpg', '00614_61.jpg', '00236_23.jpg', '00528_52.jpg', '00043_4.jpg', '00363_36.jpg', '00741_74.jpg', '00691_69.jpg', '00245_24.jpg', '00908_90.jpg', '00667_66.jpg', '00179_17.jpg', '00732_73.jpg', '00310_31.jpg', '00041_4.jpg', '00781_78.jpg', '00019_1.jpg', '00777_77.jpg', '00818_81.jpg', '00355_35.jpg', '00200_20.jpg', '00622_62.jpg', '00130_13.jpg', '00512_51.jpg', '00941_94.jpg', '00447_44.jpg', '00814_81.jpg', '00359_35.jpg', '00183_18.jpg', '00000_0.jpg', '00851_85.jpg', '00402_40.jpg', '00058_5.jpg', '00175_17.jpg', '00249_24.jpg', '00904_90.jpg', '00557_55.jpg', '00212_21.jpg', '00630_63.jpg', '00765_76.jpg', '00347_34.jpg', '00459_45.jpg', '00793_79.jpg', '00026_2.jpg', '00720_72.jpg', '00302_30.jpg', '00549_54.jpg', '00257_25.jpg', '00675_67.jpg', '00683_68.jpg', '00167_16.jpg', '00679_67.jpg', '00916_91.jpg', '00545_54.jpg', '00843_84.jpg', '00410_41.jpg', '00094_9.jpg', '00191_19.jpg', '00067_6.jpg', '00455_45.jpg', '00806_80.jpg', '00769_76.jpg', '00122_12.jpg', '00500_50.jpg', '00953_95.jpg', '00181_18.jpg', '00669_66.jpg', '00177_17.jpg', '00906_90.jpg', '00555_55.jpg', '00853_85.jpg', '00400_40.jpg', '00022_2.jpg', '00445_44.jpg', '00816_81.jpg', '00089_8.jpg', '00779_77.jpg', '00132_13.jpg', '00510_51.jpg', '00943_94.jpg', '00783_78.jpg', '00202_20.jpg', '00620_62.jpg', '00775_77.jpg', '00449_44.jpg', '00357_35.jpg', '00090_9.jpg', '00693_69.jpg', '00063_6.jpg', '00730_73.jpg', '00312_31.jpg', '00247_24.jpg', '00559_55.jpg', '00665_66.jpg', '00120_12.jpg', '00502_50.jpg', '00951_95.jpg', '00349_34.jpg', '00457_45.jpg', '00804_80.jpg', '00045_4.jpg', '00841_84.jpg', '00412_41.jpg', '00165_16.jpg', '00914_91.jpg', '00547_54.jpg', '00259_25.jpg', '00193_19.jpg', '00918_91.jpg', '00255_25.jpg', '00169_16.jpg', '00677_67.jpg', '00722_72.jpg', '00300_30.jpg', '00004_0.jpg', '00681_68.jpg', '00767_76.jpg', '00345_34.jpg', '00808_80.jpg', '00210_21.jpg', '00632_63.jpg', '00791_79.jpg', '00336_33.jpg', '00428_42.jpg', '00714_71.jpg', '00641_64.jpg', '00006_0.jpg', '00263_26.jpg', '00295_29.jpg', '00604_60.jpg', '00538_53.jpg', '00226_22.jpg', '00373_37.jpg', '00751_75.jpg', '00385_38.jpg', '00832_83.jpg', '00461_46.jpg', '00967_96.jpg', '00534_53.jpg', '00047_4.jpg', '00116_11.jpg', '00608_60.jpg', '00991_99.jpg', '00389_38.jpg', '00497_49.jpg', '00571_57.jpg', '00922_92.jpg', '00153_15.jpg', '00718_71.jpg', '00424_42.jpg', '00877_87.jpg', '00881_88.jpg', '00587_58.jpg', '00299_29.jpg', '00489_48.jpg', '00397_39.jpg', '00361_36.jpg', '00743_74.jpg', '00616_61.jpg', '00108_10.jpg', '00234_23.jpg', '00979_97.jpg', '00039_3.jpg', '00287_28.jpg', '00599_59.jpg', '00653_65.jpg', '00061_6.jpg', '00271_27.jpg', '00869_86.jpg', '00324_32.jpg', '00092_9.jpg', '00706_70.jpg', '00595_59.jpg', '00893_89.jpg', '00436_43.jpg', '00865_86.jpg', '00328_32.jpg', '00563_56.jpg', '00930_93.jpg', '00141_14.jpg', '00485_48.jpg', '00078_7.jpg', '00983_98.jpg', '00238_23.jpg', '00975_97.jpg', '00526_52.jpg', '00020_2.jpg', '00104_10.jpg', '00820_82.jpg', '00473_47.jpg', '99999_-1.jpg']
+    };
+
+    // Helper function to pad index to 5 digits (e.g., 23 becomes "00023")
+    function padIndex(index) {
+        return String(index).padStart(5, '0');
+    }
+
+    // Function to find the file name based on the padded index
+    function getFileName(index, format) {
+        const paddedIndex = padIndex(index);
+        const fileName = config.fileNameList.find(file => file.startsWith(paddedIndex));
+
+        if (fileName) {
+            // Parse the part before the extension and combine it with the desired format
+            const nameWithoutExtension = fileName.split('.')[0];
+            return `${nameWithoutExtension}.${format}`;
+        }
+
+        // Fallback in case the file is not found (though this should not happen)
+        return `${paddedIndex}_${index}.${format}`;
+    }
+
+    // Function to shuffle array (except first element)
+    function shuffleArrayExceptFirst(array) {
+        if (array.length <= 2) return array; // If there are two or fewer elements, nothing to shuffle.
+        
+        const first = array[0];
+        const last = array[array.length - 1];
+        const rest = array.slice(1, -1); // Middle elements to be shuffled
+        
+        for (let i = rest.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [rest[i], rest[j]] = [rest[j], rest[i]];
+        }
+        
+        return [first, ...rest, last];
+    }
+
+    // Create a column for combined images (pair of sub-indices)
+    function createBoundImageColumn(title, folderPath, fileNames) {
+        const columnDiv = document.createElement('div');
+        columnDiv.className = 'image-column';
+
+        const imageTitle = document.createElement('div');
+        imageTitle.className = 'image-title';
+        if (title !== "Reconstruction" && title !== "I don't know") {
+            imageTitle.innerText = "Target";
+        } else {
+            imageTitle.innerText = title;;  // Visually indicate that it is non-selectable
+        }
+        columnDiv.appendChild(imageTitle);
+
+        const imageContainer = document.createElement('div');
+        imageContainer.style.display = 'flex';
+
+        fileNames.forEach(fileName => {
+            const img = document.createElement('img');
+            img.src = `${folderPath}/${fileName}`;
+            img.alt = `${title}`;
+            img.className = 'selection-image';
+            img.style.marginRight = "0px"; // Adjust spacing between two images
+            img.dataset.folder = title;
+            imageContainer.appendChild(img);
+        });
+
+        columnDiv.appendChild(imageContainer);
+
+        columnDiv.onclick = function() {
+            if (title !== "Reconstruction") {
+                // Check if this column is already selected
+                if (this.classList.contains('selected')) {
+                    // Remove selection if already selected
+                    this.classList.remove('selected');
+                    this.querySelectorAll('.selection-image').forEach(img => img.classList.remove('selected'));
+                } else {
+                    // Find the parent question div
+                    const questionDiv = this.closest('.question');
+
+                    // Clear any existing selections within this question
+                    questionDiv.querySelectorAll('.image-column.selected').forEach(selected => {
+                        selected.classList.remove('selected');
+                        selected.querySelectorAll('.selection-image').forEach(img => img.classList.remove('selected'));
+                    });
+
+                    // Add selection to the current column
+                    this.classList.add('selected');
+                    this.querySelectorAll('.selection-image').forEach(img => img.classList.add('selected'));
+                }
+            } else {
+                columnDiv.style.cursor = "not-allowed"; // Visually indicate Reconstruction is non-selectable
+            }
+        };
+
+        return columnDiv;
+    }
+
+    function populateQuestions() {
+        document.getElementById("pageTitle").innerText = config.pageTitle;
+        document.getElementById("pageInstructions").innerText = config.pageInstructions;
+
+        const backButton = document.getElementById("backButton");
+
+        backButton.addEventListener("click", () => {
+            window.location.href = "index.html";
+        });
+
+        const nextButton = document.getElementById("nextButton");
+
+        nextButton.addEventListener("click", () => {
+            window.location.href = "index_binary.html";
+        });
+
+        const questionsContainer = document.getElementById('questions-container');
+
+        // Assuming each folder has two groups of indices and we pair them
+        config.folders[0].indices.forEach((_, questionNumber) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question';
+            questionDiv.dataset.question = questionNumber + 1;
+
+            const questionTitle = document.createElement('h2');
+            questionTitle.textContent = `Question ${questionNumber + 1}`;
+            questionDiv.appendChild(questionTitle);
+
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'image-container';
+
+            // Shuffle the folder order except the first one (e.g., "original")
+            const shuffledFolders = shuffleArrayExceptFirst(config.folders);
+
+            // Loop through each folder to combine images for each question
+            let fileNames;
+            shuffledFolders.forEach(folder => {
+                if (folder.name == 'Reconstruction') {
+                    const firstIndex = folder.indices[questionNumber]; // First sub-group index
+                    fileNames = [
+                        getFileName(firstIndex, folder.format)
+                    ];
+                } else if (folder.name == "I don't know") {
+                    const firstIndex = folder.indices[0]; // First sub-group index
+                    fileNames = [
+                        getFileName(firstIndex, folder.format)
+                    ];
+
+                } else {
+                    const firstIndex = folder.indices[0][questionNumber]; // First sub-group index
+                    const secondIndex = folder.indices[1][questionNumber]; // Second sub-group index
+
+                    fileNames = [
+                        getFileName(firstIndex, folder.format), 
+                        getFileName(secondIndex, folder.format)
+                    ];
+                }
+                const imageColumn = createBoundImageColumn(folder.name, folder.path, fileNames);
+                imageContainer.appendChild(imageColumn);
+            });
+
+            questionDiv.appendChild(imageContainer);
+            questionsContainer.appendChild(questionDiv);
+        });
+    }
+
+    // Load the questions when the page loads
+    window.onload = populateQuestions;
+
+    // Function to handle survey submission
+    function submitSurvey() {
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+
+        let log = `Name: ${name}\nEmail: ${email}\n\n`;
+        const results = {};
+        let folderCounts = {};
+
+        config.folders.forEach(folder => {
+            folderCounts[folder.name] = 0;
+        });
+
+        document.querySelectorAll('.question').forEach((question, index) => {
+            const questionNum = `Q${index + 1}`;
+            results[questionNum] = [];
+            // For each selected image, update results and folder counts
+            question.querySelectorAll('.selection-image.selected').forEach((img, imgIndex) => {
+                if (imgIndex === 0) { // Consider only the first image of the two
+                    const folder = img.dataset.folder; // Retrieve the folder name from the data attribute
+                    results[questionNum].push(folder);
+                    folderCounts[folder]++;
+                    return; // Once the first image is logged, skip the second
+                }
+            });
+        });
+
+        // Add folder summary to log
+        let folderSummary = '';
+        for (let [folder, count] of Object.entries(folderCounts)) {
+            folderSummary += `${folder}: ${count} selected\n`;
+        }
+
+        // Generate log details per question
+        let selectionSummary = '';
+        for (let [question, folders] of Object.entries(results)) {
+            selectionSummary += `${question}: ${folders.join(', ')}\n`;
+        }
+
+        const blob = new Blob([log + folderSummary + selectionSummary], {type: 'text/plain'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${name}_survey_P2.txt`;
+        link.click();
+
+        // Redirect to index2.html after download
+        setTimeout(() => {
+            window.location.href = 'index_binary.html';
+        }, 500); // Delay to ensure the download starts before redirection
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const nextButton = document.getElementById("nextButton");
+
+        // Navigate to index2.html when Next is clicked
+        nextButton.addEventListener("click", () => {
+            window.location.href = "index_binary.html";
+        });
+});
+
+</script>
+
+</body>
+</html>
