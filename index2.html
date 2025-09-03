@@ -247,6 +247,7 @@
         img.alt = `${title}`;
         img.className = 'selection-image';
         img.dataset.folder = folderPath;
+        img.dataset.name = title;
 
         // Add click event only for selectable images (not for "original")
         if (isSelectable) {
@@ -278,9 +279,9 @@
             const questionNum = `Q${index + 1}`;
             results[questionNum] = [];
             question.querySelectorAll('.selection-image.selected').forEach(img => {
-                const folder = img.dataset.folder;
-                results[questionNum].push(folder);
-                folderCounts[folder]++;
+                const folderName = img.dataset.name;  // 用短名字
+                results[questionNum].push(folderName);
+                folderCounts[folderName]++;
             });
         });
 
