@@ -38,9 +38,10 @@
       margin-top: 10px;
     }
 
+    /* UPDATED: now 9 columns (Original + 8 conditions) */
     .header-row, .image-row{
       display: grid;
-      grid-template-columns: repeat(8, 150px);
+      grid-template-columns: repeat(9, 150px);
       align-items: center;
       column-gap: 10px;
     }
@@ -73,6 +74,12 @@
     }
     .selection-image.selected {
         border: 5px solid red;
+    }
+
+    /* NEW: non-selectable "Original" column styling */
+    .selection-image.disabled{
+        cursor: default;
+        opacity: 0.92;
     }
 
     .bulk-actions{
@@ -142,14 +149,17 @@
   const config = {
     // Orders follow folders (no shuffle)
     folders: [
-      { name: "MSPD", path: "MSPD", colTitle: "Raw" },
-      { name: "PGD", path: "PGD", colTitle: "Raw" },
-      { name: "MSPD-sharpen", path: "MSPD-sharpen", colTitle: "Sharpen" },
-      { name: "PGD-sharpen", path: "PGD-sharpen", colTitle: "Sharpen" },
-      { name: "MSPD-brightness1.5", path: "MSPD-brightness1.5", colTitle: "High Brightness" },
-      { name: "MSPD-contrast1.5", path: "MSPD-contrast1.5", colTitle: "High Contrast" },
-      { name: "MSPD-jpeg50", path: "MSPD-jpeg50", colTitle: "Compression" },
-      { name: "MSPD-jpeg50-jpeg50", path: "MSPD-jpeg50-jpeg50", colTitle: "Multiple Compression" },
+      // NEW: first column "Original" (non-selectable, not counted)
+      { name: "clean", path: "clean", colTitle: "Original", selectable: false },
+
+      { name: "MSPD", path: "MSPD", colTitle: "Defense", selectable: true },
+      { name: "PGD", path: "PGD", colTitle: "Attack", selectable: true },
+      { name: "MSPD-sharpen", path: "MSPD-sharpen", colTitle: "Sharpen", selectable: true },
+      { name: "PGD-sharpen", path: "PGD-sharpen", colTitle: "Sharpen", selectable: true },
+      { name: "MSPD-brightness1.5", path: "MSPD-brightness1.5", colTitle: "High Brightness", selectable: true },
+      { name: "MSPD-contrast1.5", path: "MSPD-contrast1.5", colTitle: "High Contrast", selectable: true },
+      { name: "MSPD-jpeg50", path: "MSPD-jpeg50", colTitle: "Compression", selectable: true },
+      { name: "MSPD-jpeg50-jpeg50", path: "MSPD-jpeg50-jpeg50", colTitle: "Multiple Compression", selectable: true },
     ],
 
     // Exactly 20 samples
@@ -188,15 +198,22 @@
   }
 
   function toggleSelected(imgEl) {
+    // Guard: do nothing if non-selectable
+    if (imgEl.dataset.selectable !== "true") return;
     imgEl.classList.toggle('selected');
   }
 
   function setAllSelected(questionDiv, selected) {
-    const imgs = questionDiv.querySelectorAll('.selection-image');
+    // Only apply to selectable images
+    const imgs = questionDiv.querySelectorAll('.selection-image[data-selectable="true"]');
     imgs.forEach(img => {
       if (selected) img.classList.add('selected');
       else img.classList.remove('selected');
     });
+  }
+
+  function countSelectableColumns() {
+    return config.folders.filter(f => f.selectable !== false).length;
   }
 
   // ===== UI Builders =====
@@ -209,9 +226,18 @@
     img.src = `${folder.path}/${fileName}`;
     img.alt = folder.name;
     img.className = 'selection-image';
-    img.dataset.folder = folder.path;   // path
-    img.dataset.name = folder.name;     // "folder name" for counting
-    img.onclick = () => toggleSelected(img);
+
+    const selectable = folder.selectable !== false;
+    img.dataset.selectable = selectable ? "true" : "false";
+
+    if (selectable) {
+      img.dataset.folder = folder.path;   // path
+      img.dataset.name = folder.name;     // "folder name" for counting
+      img.onclick = () => toggleSelected(img);
+    } else {
+      img.classList.add('disabled');
+      // no onclick, no dataset.name => can't be counted
+    }
 
     cell.appendChild(img);
     return cell;
@@ -224,6 +250,8 @@
     const questionsContainer = document.getElementById('questions-container');
     questionsContainer.innerHTML = "";
 
+    const selectableCount = countSelectableColumns();
+
     config.indices.forEach((idx, sampleNumber) => {
       const questionDiv = document.createElement('div');
       questionDiv.className = 'question';
@@ -233,14 +261,14 @@
       questionTitle.textContent = `Sample ${sampleNumber + 1}`;
       questionDiv.appendChild(questionTitle);
 
-      // Bulk select controls (select all 8 together / clear all)
+      // Bulk select controls (select all selectable columns / clear all)
       const bulk = document.createElement('div');
       bulk.className = 'bulk-actions';
 
       const selectAllBtn = document.createElement('button');
       selectAllBtn.type = "button";
       selectAllBtn.className = "mini-btn";
-      selectAllBtn.textContent = "Select all (8)";
+      selectAllBtn.textContent = `Select all (${selectableCount})`;
       selectAllBtn.onclick = () => setAllSelected(questionDiv, true);
 
       const clearBtn = document.createElement('button');
@@ -261,11 +289,6 @@
       const headerRow = document.createElement('div');
       headerRow.className = 'header-row';
 
-      // const emptyCorner = document.createElement('div');
-      // emptyCorner.className = 'row-label';
-      // emptyCorner.textContent = ""; // left corner blank
-      // headerRow.appendChild(emptyCorner);
-
       config.folders.forEach(folder => {
         const h = document.createElement('div');
         h.className = 'col-header';
@@ -273,14 +296,9 @@
         headerRow.appendChild(h);
       });
 
-      // Single image row (one line, 8 images)
+      // Single image row (one line)
       const imageRow = document.createElement('div');
       imageRow.className = 'image-row';
-
-      // const rowLabel = document.createElement('div');
-      // rowLabel.className = 'row-label';
-      // rowLabel.textContent = "Select";
-      // imageRow.appendChild(rowLabel);
 
       config.folders.forEach(folder => {
         imageRow.appendChild(createImageCell(folder, idx));
@@ -305,11 +323,14 @@
     let log = `Name: ${name}\n`;
     log += `Date: ${new Date().toISOString()}\n`;
     log += `Total Samples: ${config.indices.length}\n`;
-    log += `Folders (columns): ${config.folders.map(f => f.name).join(", ")}\n\n`;
 
-    // Count selections by column (folder "name")
+    // Only list/count selectable folders (exclude "clean")
+    const selectableFolders = config.folders.filter(f => f.selectable !== false);
+    log += `Folders (columns): ${selectableFolders.map(f => f.name).join(", ")}\n\n`;
+
+    // Count selections by column (folder "name") - selectable only
     const folderCounts = {};
-    config.folders.forEach(folder => { folderCounts[folder.name] = 0; });
+    selectableFolders.forEach(folder => { folderCounts[folder.name] = 0; });
 
     // Per-sample selections
     const results = {};
@@ -320,7 +341,8 @@
 
       const selectedImgs = question.querySelectorAll('.selection-image.selected');
       selectedImgs.forEach(img => {
-        const folderName = img.dataset.name; // folder "name"
+        const folderName = img.dataset.name; // only exists for selectable cols
+        if (!folderName) return;
         results[sampleId].push(folderName);
         folderCounts[folderName] += 1;
       });
