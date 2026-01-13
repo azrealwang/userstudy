@@ -343,11 +343,6 @@
     link.href = URL.createObjectURL(blob);
     link.download = `${name}_userstudy_log.txt`;
     link.click();
-
-    // Optional redirect (kept from your original)
-    setTimeout(() => {
-      window.location.href = 'index2.html';
-    }, 500);
   }
 
   window.onload = populateQuestions;
