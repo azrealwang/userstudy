@@ -197,14 +197,23 @@
     // Exactly 20 samples (indices here are used to pick filenames by prefix)
     indices: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],
 
+    // pageTitle: "Image Quality Study",
+    // pageInstructions:
+    //   "Thank you for taking part in this short study (about 5 minutes).<br>" +
+    //   "<ul>" +
+    //   "<li>You will see 20 samples. Each sample has 2 rows: <b>'Original'</b> (top, reference) and <b>'Selection'</b> (bottom, modified images).</li>" +
+    //   "<li>The goal is to assess whether each modified image is <b>perceptually similar enough</b> to the reference that it could reasonably <b>replace the original</b> (e.g., for sharing or uploading on social media).</li>" +
+    //   "<li>In the bottom row, please select all images that <b>would NOT be acceptable as a perceptual replacement</b> for the reference image. You may select multiple images or none.</li>" +
+    //   "<li>Tip: use 'Select all' or 'Clear' to reset a sample. Refreshing the page will clear all selections.</li>" +
+    //   "<li>When finished, click 'Submit.' A log file will download—please email it to " +
+    //   "<a style='color:white; text-decoration:underline;' href='mailto:hanrui_wang@nii.ac.jp'>hanrui_wang@nii.ac.jp</a>.</li>" +
+    //   "</ul>"
     pageTitle: "Image Quality Study",
     pageInstructions:
       "Thank you for taking part in this short study (about 5 minutes).<br>" +
       "<ul>" +
-      "<li>You will see 20 samples. Each sample has 2 rows: <b>'Original'</b> (top, reference) and <b>'Selection'</b> (bottom, modified images).</li>" +
-      "<li>The goal is to assess whether each modified image is <b>perceptually similar enough</b> to the reference that it could reasonably <b>replace the original</b> (e.g., for sharing or uploading on social media).</li>" +
-      "<li>In the bottom row, please select all images that <b>would NOT be acceptable as a perceptual replacement</b> for the reference image. You may select multiple images or none.</li>" +
-      "<li>Tip: use 'Select all' or 'Clear' to reset a sample. Refreshing the page will clear all selections.</li>" +
+      "<li>You will see <b>20 samples</b>. Each sample shows an <b>'Original'</b> image (top) and several <b>modified</b> images (bottom). The modifications are applied for <b>resisting malicious image editing</b>. We want to know whether these changes <b>reduce image quality</b>.</li>" +
+      "<li>The images are shown side by side, so differences may be visible. Please judge quality, not similarity.</b> Select all modified images whose <b>visual quality you consider worse</b> than the original (e.g., noisier, unpleasant color shifts, or degraded appearance). You may select multiple images or none.</li>" +
       "<li>When finished, click 'Submit.' A log file will download—please email it to " +
       "<a style='color:white; text-decoration:underline;' href='mailto:hanrui_wang@nii.ac.jp'>hanrui_wang@nii.ac.jp</a>.</li>" +
       "</ul>"
