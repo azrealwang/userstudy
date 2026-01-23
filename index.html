@@ -266,6 +266,14 @@
     return config.groups.length * 2;
   }
 
+  function shuffleInPlace(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
   // ===== UI Builders =====
   function createImage(folderPath, index, opts) {
     const fileName = findFileNameByIndex(index);
@@ -390,8 +398,9 @@
           nameForLog: `PGD-${g.key}`
         });
 
-        pair.appendChild(mspd);
-        pair.appendChild(pgd);
+        const pairImgs = [mspd, pgd];
+        shuffleInPlace(pairImgs);          // ✅ randomize left-right
+        pairImgs.forEach(img => pair.appendChild(img));
 
         const labels = document.createElement('div');
         labels.className = 'pair-labels';
