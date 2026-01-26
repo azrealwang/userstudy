@@ -49,11 +49,13 @@
     }
 
     /* 5 groups: raw, sharpen, brightness, contrast, compression */
+    /* keep your original layout */
     .header-row, .row{
       display: grid;
       grid-template-columns: repeat(5, 280px);
+      column-gap: 20px;          /* this gap becomes the separator area */
       align-items: center;
-      column-gap: 20px;
+      position: relative;
     }
 
     .col-header{
@@ -151,6 +153,28 @@
       max-width: 100%;
       padding-bottom: 8px;
     }
+
+    /* vertical separators aligned across rows */
+    .header-row::before,
+    .row::before{
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+
+      /* draw 1px line in the middle of each column-gap */
+      background:
+        repeating-linear-gradient(
+          to right,
+          transparent 0,
+          transparent 288px,
+          rgba(0,0,0,0.2) 288px,
+          rgba(0,0,0,0.2) 292px,
+          transparent 281px,
+          transparent 300px    /* 280 + 20 gap */
+        );
+    }
+
 
     footer{ text-align: center; padding: 20px; }
 
